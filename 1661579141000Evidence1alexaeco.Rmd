@@ -1,0 +1,488 @@
+---
+title: "Evidence 1. Predictive Model Report"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+-   **Alexa Mariana Marin Villar A00831342**
+
+```{r, include=FALSE,warning=FALSE}
+# Libraries
+library(readr)
+library(foreign)
+library(dplyr)        # data manipulation 
+library(forcats)      # to work with categorical variables
+library(ggplot2)      # data visualization 
+library(readr)        # read specific csv files
+library(janitor)      # data exploration and cleaning 
+library(Hmisc)        # several useful functions for data analysis 
+library(psych)        # functions for multivariate analysis 
+library(naniar)       # summaries and visualization of missing values NAs
+library(dlookr)       # summaries and visualization of missing values NAs
+library(corrplot)     # correlation plots
+library(jtools)       # presentation of regression analysis 
+library(lmtest)       # diagnostic checks - linear regression analysis 
+library(car)          # diagnostic checks - linear regression analysis
+library(olsrr)        # diagnostic checks - linear regression analysis 
+library(kableExtra)   # HTML table attributes
+library(gmodels)
+library(naniar)       # identifying missing values
+library(funModeling)  # create frequency tables
+library(stargazer)    # create publication quality tables
+library(effects)      # displays for linear and other regression models
+library(kableExtra)   # HTML table attributes
+library(glmnet)
+library(mice)
+library(gmodels)
+library(kableExtra)
+```
+
+```{r,include=FALSE}
+ev1_data <- read_csv("C:/Users/usuario/Downloads/QUINTO SEM/ECONOMETRIA/ev1_data.csv")
+#View(ev1_data)
+```
+
+# Introduction
+
+| In this evidence I am going to analyze the data set "*Ev 1*" which is about socio-economic characteristics of Mexicans and to analyze if this characteristics influence the decisions whether to purchase with credit cards or not. Also to create 3 Regression analysis models and select the regression model that better fits the data.
+| 
+| First of all:
+| 
+| **¿Why does linear regression analysis is useful to predict an outcome?**
+| 
+| Linear regression analysis can contribute to improve predictive analysis and is actually the most common method for predictive analysis. This because linear regression uses the relationships between a dependent variable (the variable you want to predict) and one or more independent variables(the variable you are using to predict) to predict the future of the target (dependent variable). Linear regression result as an useful tool for predictive modeling and forecasting.
+
+# Background
+
+| **According to Fintech business**:  
+| 
+| Cash remains the preferred form of consumer payments in Mexico this can be attributed to Mexico's large (63 percent) unbanked population. But also Card is a dominant payment method in Mexico, used in 45 percent of all transactions and worth \$10.2 billion in sales.37 Debit card penetration is high, at 1.12 cards per capita, compared with 0.25 for credit cards. But **only about 10% of Mexicans hold a general purpose credit card.**
+| 
+| **According to the Country Report of Credit cards in Mexico** **from Euromonitor Passport:**
+
+| In 2021 after the difficulties of the pandemic the number of credit card uses in Mexico began to increase again. However, many local consumers remained cautious with regard to spending with credit cards. The rate of growth in the current value of credit card transactions will accelerate sharply in during this year(2022) and remain robust for the remainder of the forecast period. As consumer confidence is lifted by a post-pandemic economic recovery, credit cards will increasingly be used to purchase big-ticket items, enabling local consumers to pay for them over time. The penetration rate for credit cards in Mexico remains very low, leaving **significant potential for growth.**
+
+##### Table.1 Credit card in Circulation 2016-2021
+
+![](images/2022-08-25%20(2).png)
+
+| **The latest trends of the credit card industry**
+| *According to Statista and the Forecast of the credit card penetration in Mexico from 2010 to 2025*
+
+##### Table.2 Forecast of the credit card penetration in Mexico from 2010 to 2025
+
+![](images/statistic_id1149806_credit-card-penetration-forecast-in-mexico-2010-2025.png)
+
+| This statistic shows a forecast of the estimated credit card penetration in Mexico until 2025. It is projected to reach 29 percent by 2025. The penetration rate refers to the share of the total population who use credit cards. The shown data are an excerpt of Statista's Key Market Indicators (KMI).
+| 
+| Also some trends in this industry are to digitalize more to digital only banks which are acquired by mobile apps where users make their accounts very fast and can start to use this method as fast as possible . 
+
+# The problem situation
+
+| ***What is the problem situation?***
+| 
+| Financiera Ma is a popular financial intermediary present in Latin American countries. In Mexico the use of credit cards are considerably low.  Financiera MA don´t understand why their clients don´t use their credit cards as often as expected. Maya Velazquez the Chief credit officer will be developing a clear understanding of how Socio-economic characteristics of Mexico influence individual decisions whether to purchase with credit cards or not.
+| 
+| **How can we address the problem situation?**
+| 
+| My job in this evidence is to develop models that can help understand the essential factors that motivate Mexicans to use(or not use) a credit card.
+
+# Data and Methodology
+
+## Describe the data set
+
+*The data set has 8 columns and 3415 rows*
+
+1.  **Region** : six geographic regions.
+
+2.  **useCard** : number of times the credit card is used (bank or store) per month.
+
+3.  **dCard :** dummy= 1 if the credit card is used at least once a month.
+
+4.  **Income** : monthly income in thousand pesos.
+
+5.  **education** : dummy =1 if undergraduate level or higher.
+
+6.  **age** : age in years.
+
+7.  **age2** : age squared.
+
+8.  **dPhone:** dummy =1 if owns a smartphone.
+
+### Identifying Missing values
+
+```{r}
+sum(is.na(ev1_data))      
+colSums(is.na(ev1_data))  
+gg_miss_var(ev1_data) 
+```
+
+### Impute missing values
+
+```{r,warning=FALSE}
+ev1_data$income[is.na(ev1_data$income)]<-median(ev1_data$income,na.rm =TRUE)
+
+sum(is.na(ev1_data$income))
+
+gg_miss_var(ev1_data)
+```
+
+# Exploratory Data Analysis
+
+### Descriptive Statistics
+
+```{r}
+describe(ev1_data)
+```
+
+```{r}
+str(ev1_data)
+```
+
+```{r}
+summary(ev1_data)
+```
+
+### Data Visualization
+
+### Variables Transformation
+
+```{r}
+ev1_data$education<-as.factor(ev1_data$education)  
+ev1_data$dCard<-as.factor(ev1_data$dCard) 
+ev1_data$dPhone<-as.factor(ev1_data$dPhone) 
+ev1_data$region<-as.factor(ev1_data$region)
+```
+
+```{r}
+ggplot(data=ev1_data,aes(x=reorder(region,useCard),y=useCard,fill=region)) +
+  geom_bar(stat="identity") + coord_flip() +  
+  labs(subtitle="Use card by Region", 
+       y="Use card", 
+       x="Region", 
+       title="Bar Graph",
+       caption = "Source: ev1_data") +theme_light() + theme(plot.title = element_text(face = "bold"))+ scale_fill_brewer("BuPu")
+
+```
+
+```{r}
+ggplot(data=ev1_data,aes(x=reorder(education,useCard),y=useCard,fill=education)) +
+  geom_bar(stat="identity") + coord_flip() + scale_fill_manual(values=c("midnightblue", "skyblue")) + labs(subtitle="Usecard by education", 
+       y="Usecard", 
+       x="Education", 
+       title="Bar Graph",
+       caption = "Source: ev1_data")+theme_light() + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r}
+ggplot(data=ev1_data,aes(x=reorder(dPhone,useCard),y=useCard,fill=dPhone)) +
+  geom_bar(stat="identity") + coord_flip()  + labs(subtitle="UseCard by dPhone", 
+       y="Use Card", 
+       x="Dphone", 
+       title="Bar graph",
+       caption = "Source: ev1_data")  + scale_fill_manual(values=c("midnightblue", "skyblue"))+theme_light() + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r}
+ggplot(data=ev1_data,aes(x=reorder(region,income),y=income, fill=region)) +
+  geom_bar(stat="identity") + coord_flip() + labs(subtitle="Income by region", 
+       y="Income", 
+       x="Region", 
+       title="Bar Graph",
+       caption = "Source: ev1_data") + scale_x_discrete(limits=c("1", "2", "3","4","5","6")) + scale_fill_brewer("BuPu")+theme_light() + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r}
+ev1_data %>% mutate(age=cut(age,breaks=c(0,10.20,30,40,50,60,70,80,90,100))) %>%
+  ggplot(aes(x=reorder(age,useCard),y=useCard,fill=education)) +
+  geom_bar(stat="identity") + labs(subtitle="Use of credit card by age relation and education", 
+       y="Use card", 
+       x="Age", 
+       title="Bar Graph",
+       caption = "Source: ev1_data") + scale_fill_brewer("BuPu")+theme_light() + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r}
+ev1_data %>% mutate(age=cut(age,breaks=c(0,10.20,30,40,50,60,70,80,90,100))) %>%
+  ggplot(aes(x=reorder(age,useCard),y=useCard,fill=region)) +
+  geom_bar(stat="identity") + labs(subtitle="Use of credit card by age relation and region", 
+       y="Use card", 
+       x="Age", 
+       title="Bar Graph",
+       caption = "Source: ev1_data") + scale_fill_brewer("BuPu")+theme_light() + theme(plot.title = element_text(face = "bold"))
+```
+
+### Histogram of the dependent variables *(Use Card and income)*
+
+#### Income
+
+```{r}
+hist(ev1_data$income, col="mediumaquamarine",main="Histogram of the dependent variable")+theme_minimal()# (right) skewed distribution 
+ev1_datalog<-hist(log(ev1_data$income),col="mediumaquamarine",main="Histogram of the dependent variable with log")
+```
+
+#### Use Card
+
+```{r}
+hist(ev1_data$useCard, col="mediumaquamarine",main="Histogram of the dependent variable")+theme_minimal()# (right) skewed distribution 
+ev1_datalog<-hist(log(ev1_data$useCard),col="mediumaquamarine",main="Histogram of the dependent variable with log")
+```
+
+**In this case I choose to do the three models with the dependent variable "useCard".**
+
+### Which estimated method is going to be conducted to estimate the linear regression model?
+
+The estimated method in this case is going to be the OLS regression model.
+
+```{r,include=FALSE}
+### Transform back to numeric the variables need for correlation
+ev1_data$region<-as.numeric(ev1_data$region)
+```
+
+### Correlation Plot
+
+```{r}
+ev1_datacor <- ev1_data %>% select (-education,-dPhone,-dCard)
+corrplot(cor(ev1_datacor),type='upper',order='hclust',addCoef.col='black')
+```
+
+# Linear regression analysis
+
+## Hypothesis
+
+1.  If the surveyed people have an undergraduate or a higher education an increase is expected in the number of times the credit card is used (bank or store) per month.
+
+2.  If the surveyed people have a phone an increase is expected in the number of times the credit card is used(bank or store) per month.
+
+3.  If the surveyed people are in a certain region depending on the region an increase or a decrease is expected in the number of times de credit card is used(bank or store) per month.
+
+4.  If the surveyed people are adults and increase is expected in the number of times de credit card is used(bank or store) per month.
+
+5.  If the surveyed people have a higher income an increase is expected in the number of times the credit card is used(bank or store).
+
+6.  If the surveyed people use t least once a month a credit card an increase is expected in the number of times the credit card is used(bank or store).
+
+#### Model 1
+
+```{r,include=FALSE}
+### Transform back to factor the variables needed
+ev1_data$region<-as.factor(ev1_data$region)
+```
+
+```{r}
+modelev1<-lm(useCard~region+dCard+education+age+dPhone+income,data=ev1_data)
+summary(modelev1)   
+```
+
+```{r,warning=FALSE}
+### OLS - Regression Model Diagnostics ###
+stargazer(modelev1,type="text",title="OLS Regression Results Income ",single.row=TRUE,ci=FALSE,ci.level=0.9) ### present OLS Regression results in text format 
+```
+
+##### Perform diagnostic test for the linear regression model
+
+```{r}
+#NULL HYPOTHESIS =homoscedasticity AND Multicollinearity
+#ALT HYPOTHESIS = heteroscedasticity
+
+### Detecting Multicollinearity
+vif(modelev1) 
+
+### Detecting Heteroscedasticity
+ 
+plot(fitted(modelev1),modelev1$residuals)
+bptest(modelev1) 
+
+```
+
+Variance Inflation Factors (VIF) greater than 10 suggests the presence of Multicollinearity, In this case we do not have Multicollinearity.Also The p-value is less than 0.01 rejecting the null hypothesis of homoscedasticity. That is why I have evidence to suggest that heteroscedasticity is present in the regression model.
+
+#### Model 2
+
+```{r}
+
+ev1_data<-ev1_data %>% mutate (usecard2 = useCard +0.01)
+
+
+modelev2<-lm(log(usecard2)~ region+dCard+income+education+age2+dPhone,
+               data=ev1_data)
+
+summary(modelev2)
+```
+
+```{r,warning=FALSE}
+### OLS - Regression Model Diagnostics ###
+stargazer(modelev2,type="text",title="OLS Regression Results Income ",single.row=TRUE,ci=FALSE,ci.level=0.9) ### present OLS Regression results in text format 
+```
+
+##### Perform diagnostic test for the linear regression model
+
+```{r}
+#NULL HYPOTHESIS =homoscedasticity AND Multicollinearity
+#ALT HYPOTHESIS = heteroscedasticity
+
+### Detecting Multicollinearity
+vif(modelev2) 
+
+### Detecting Heteroscedasticity
+ 
+plot(fitted(modelev2),modelev1$residuals)
+bptest(modelev2) 
+
+```
+
+Variance Inflation Factors (VIF) greater than 10 suggests the presence of Multicollinearity, In this case we do not have Multicollinearity.Also The p-value is less than 0.01 rejecting the null hypothesis of homoscedasticity. That is why I have evidence to suggest that heteroscedasticity is present in the regression model.
+
+#### Model 3
+
+```{r}
+
+modelev3<-lm(log(usecard2)~ region+dCard+income+education+age+dPhone,
+               data=ev1_data)
+
+summary(modelev3)
+```
+
+```{r,warning=FALSE}
+### OLS - Regression Model Diagnostics ###
+stargazer(modelev3,type="text",title="OLS Regression Results Income ",single.row=TRUE,ci=FALSE,ci.level=0.9) ### present OLS Regression results in text format 
+```
+
+##### Perform diagnostic test for the linear regression model
+
+```{r}
+#NULL HYPOTHESIS =homoscedasticity AND Multicollinearity
+#ALT HYPOTHESIS = heteroscedasticity
+
+### Detecting Multicollinearity
+vif(modelev3) 
+
+### Detecting Heteroscedasticity
+ 
+plot(fitted(modelev3),modelev1$residuals)
+bptest(modelev3) 
+
+```
+
+Variance Inflation Factors (VIF) greater than 10 suggests the presence of Multicollinearity, In this case we do not have Multicollinearity.Also The p-value is less than 0.01 rejecting the null hypothesis of homoscedasticity. That is why I have evidence to suggest that heteroscedasticity is present in the regression model.
+
+# Selection of the model
+
+```{r}
+AIC(modelev1)
+```
+
+```{r}
+AIC(modelev2)
+
+
+```
+
+```{r}
+AIC(modelev3)
+```
+
+| Even though each of the three regression models have present heteroscedasticity , the model that we think fits better the data is the **model #3**, based on the Akaike Information Criterion results the model #3 has the lower result meaning a better quality of a regression model.
+
+### Interpret the regression ressults of the selected model
+
+```{r,warning=FALSE}
+stargazer(modelev3,type="text",title="OLS Regression Results Income ",single.row=TRUE,ci=FALSE,ci.level=0.9) 
+```
+
+**In this model we have 5 statistically significant independent variables that are:**
+
+1.  *region 6*
+
+2.  *dCard*
+
+3.  *income*
+
+4.  *education*
+
+5.  *age*
+
+Basically **if the independent variable grows in one percent *(because of the use of log*) the dependent variable use Card will grow** (If it is the case). For example:
+
+-   In region 6 we have a significance of p\<0.01, in this case if the region grows in one percent, the number of times the credit card is used in this region will decrease in 0.093%.
+
+-   In dcard we have also a significance of p\<0-01. In this case if people use of a credit card once a month grows in one percent, the number of times the credit card is used (bank or store) will grow in 5.316%..
+
+-   In income we have also a significance of p\<0-01. In this case if income grows in one percent, the number of times the credit card is used (bank or store) per month grows will grow in 0.012%.
+
+-   In education we also have a significance of p\<0-01. In this case if the client has an undergraduate or higher education grows in one percent , the number of times the credit card is used (bank or store) per month will grow in 0.182%.
+
+-   In age we have a significance of p\<0.1, In this case if people ages grows in one percent the number of times the credit card is used (bank or store) per month will grow in 0.001%.
+
+### Show the predictive values of the dependent variable (effect plots)
+
+```{r,echo=FALSE,warning=FALSE}
+effect_plot(modelev3,pred=region,interval=TRUE)
+effect_plot(modelev3,pred=dCard,interval=TRUE)
+effect_plot(modelev3,pred=income,interval=TRUE)
+effect_plot(modelev3,pred=education,interval=TRUE)
+effect_plot(modelev3,pred=age,interval=TRUE)
+```
+
+Accoording to the statistically significant variables the hypothesis that are accepted are :
+
+1.  If the surveyed people have an undergraduate or a higher education an increase is expected in the number of times the credit card is used (bank or store) per month.
+
+2.  If the surveyed people are in a certain region depending on the region an increase or a decrease is expected in the number of times de credit card is used(bank or store) per month.
+
+3.  If the surveyed people are adults an increase is expected in the number of times de credit card is used(bank or store) per month.
+
+4.  If the surveyed people have a higher income an increase is expected in the number of times the credit card is used(bank or store).
+
+5.  If the surveyed people use t least once a month a credit card an increase is expected in the number of times the credit card is used(bank or store).
+
+# Conclusions and Recommendations
+
+### Describe the main insights from the sections
+
+The main insights from the sections talking about the selected model is that the impact of the statistically significant independent variables with the dependent variable use Card are mostly positive except from region 6. Mostly all the variables have a significance with a p\<0.01 except from age with an p\<0.1.
+
+-   As we can observe it depends of the region if it has a postive or negative impact, in the case of region 6 the negative impact may be because of certain factors as income, age etc.
+
+-   Also in the case of dcard if people use of a credit card at least once a month grows in one percent, the number of times the credit card is used (bank or store) will grow.This could be directly connected to the number of times the credit card is used per month (bank or store).
+
+-   Following now with income it has a positive impact in the dependent variable use Card which means if the montly income grows,use card is expected to grow.
+
+-   Now talking about education this independent variable also impacts positively in the dependent variable use Card which means if the client has an undergraduate or higher education growth in one percent , the dependent variable use card will increase. This could be interpreted as the age insight, as people grow older and have a higher education, they could have more financial responsibilities and therefore need to use the card more often.
+
+-   Also in age this independent variable has a positive impact in the dependent variable use cards, this could be because as people grow older they could have more financial responsibilities and therefore need to use the card more often.
+
+-   For the dependent variable use Card, the data is not normally distributed and still with the log function it shows that the use time is less than 10.
+
+### Based on the selected results please share at least 1 recommendation that address the SP.
+
+According to the insights in the past section, I recommend Financiera Ma and Maya Velazquez the Chief credit officer according to the essential factors that motivate Mexicans to use a credit card , first of all to take into account the trends for the next years as to **adapt** to a more friendly digital bank for easier use to their clients and also offering a **personalized experience** for their clients, I decided to do research and banks like "Discover it" offer credit plans for specific audiences, for students, older etc.(Bridges,B ). This could be helpful to Financiera Ma to create a more personalized **experience based on the generation** of their clients. To conclude **offering rewards** like points by a purchase with the credit card could be a way to attract their clients to use the card more often. Acoording to NerdWallet in the USA the best rewards to offer to clients are:
+
+1.  With a cash-back credit card, the card issuer "pays you back" a certain percentage of every purchase. For example, if your card earns 1.5% cash back on all purchases and you buy something for \$100, you would earn \$1.50 in cash back.
+
+2.  With a points or miles card, the issuer gives you a certain number of rewards points (often called \"miles\" on airline and travel credit cards) for each dollar you spend. How you use the points or miles depends on the card. Common redemption options include travel, gift cards and merchandise.
+
+3.  With most rewards cards, you can see your accumulated earnings on your monthly statement or through your online account portal, and you can decide when and how to redeem them.
+
+    This are some recommendations I suggest to Financiera MA to apply to increase the use of the credit cards between their actual clients and also to attract more clients to apply for a credit card in their company.
+
+### References
+
+1.  *Credit Cards in Mexico*. (s. f.). Euromonitor. Recuperado 22 de agosto de 2022, de <https://www.portal.euromonitor.com/portal/Analysis/Tab#>
+
+2.  Mikula, J. (2021, 12 septiembre). *Why Credit Card Rates Can Hit 151% in Mexico*. Trends. Recuperado 22 de agosto de 2022, de <https://fintechbusinessweekly.substack.com/p/why-credit-card-rates-can-hit-151>
+
+3.  *Bases de Datos Biblioteca TEC*. (s. f.). STATISTA Forecast. Recuperado 26 de agosto de 2022, de <https://biblioteca-ils.tec.mx:443/wamvalidate?url=https%3A%2F%2F0-www-statista-com.biblioteca-ils.tec.mx%3A443%2Fforecasts%2F1149806%2Fcredit-card-penetration-forecast-in-mexico>
+
+4.  *About Linear Regression \| IBM*. (s. f.). IBM. Recuperado 17 de agosto de 2022, de <https://www.ibm.com/topics/linear-regression>
+
+5.  Bridges, B. (s. f.). *Todays Best Credit Cards*. Bankrate. Recuperado 27 de agosto de 2022, de <https://www.bankrate.com/finance/credit-cards/todays-best-credit-cards/>
+
+6.  NerdWallet. (s. f.). *Best Rewards Credit Cards*. Recuperado 27 de agosto de 2022, de <https://www.nerdwallet.com/best/credit-cards/rewards>
