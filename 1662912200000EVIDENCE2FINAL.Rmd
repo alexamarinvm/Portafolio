@@ -1,0 +1,733 @@
+---
+title: "EVIDENCE 2"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE,warning=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+**Alexa Mariana Marin Villar A00831342**
+
+```{r, include=FALSE,warning=FALSE}
+#Libraries
+library(xts)
+library(zoo)
+library(tseries)
+library(stats)
+library(forecast)
+library(astsa)
+library(corrplot)
+library(AER)
+library(vars)
+library(dynlm)
+library(vars)
+library(mFilter)
+library(tseries)
+library(TSstudio)
+library(forecast)
+library(tidyverse)
+library(sarima)
+library(vars)
+library(foreign)
+library(dplyr)        
+library(forcats)     
+library(ggplot2)      
+library(readr)        
+library(janitor)      
+library(Hmisc)        
+library(psych)        
+library(naniar)      
+#library(dlookr)       
+library(corrplot)     
+library(jtools)        
+library(lmtest)       
+library(car)      
+library(olsrr)        
+library(naniar)      
+library(funModeling) 
+library(stargazer)    
+library(effects)      
+library(tidyverse)    
+library(glmnet)
+library(mice)
+library(rlang)
+#library(Metrics)
+library(tidyverse)
+library(gridExtra)
+library(readxl)
+```
+
+```{r,include=FALSE}
+setwd("~/econometrics")
+datacredit <- read_excel("ev2_datacredit.xlsx")
+View(datacredit)
+```
+
+# a. Introduction
+
+In this evidence I am going to analyze the data set "*Ev 2_data*" which
+is about economic factors that could affect or impact the amount of
+credit that is granted for households
+
+First of all: \| \| **¿What is time series analysis?**
+
+Time series analysis is a way of analyzing a sequence of data points
+collected over an interval of time. Analyst record data points at
+consistent intervals over a set period of time rather than just
+recording the data points intermittently or randomly. This analysis can
+show how variables change over time, because it shows how the data
+adjusts over the course of data points and it provides additional source
+of information with a set order of dependencies between the data.
+
+This analysis typically requiered the use of large number of data points
+to ensure consistency and reliability. This ensures that any trend or
+pattern discovered are not outliers and can account for seasonal
+variance. Also this analyisis can be used for forecasting and predicting
+future based on the historical data analyzed *(Time Series Analysis:
+Definition, Types, Techniques, and When It's Used.S.F)*.
+
+References: Time Series Analysis: Definition, Types, Techniques, and
+When It's Used. (S.F). Tableau. Recuperado 10 de septiembre de 2022, de
+<https://www.tableau.com/learn/articles/time-series-analysis>
+
+# b. Background
+
+-   **What are the latest trends of credit to households in Mexico?
+    Please cite at least 1 external reference to develop your
+    explanation.**
+
+According to Statista in a study of **Mexico: change on housing demand
+2019-2020**
+
+![](images/statistic_id1150753_mexico_-change-on-housing-demand-2019-2020%20(1).png){width="397"}
+
+In 2020 It was estimated that the demand for houses would decrease by
+nine percent in Mexico in comparison to the previous year(2019).
+Households with improved **credit** status were expected to suffer the
+most, with an estimated reduction of **14.1 percent (**Bases de Datos
+Biblioteca TEC, s. f**.)**
+
+reference: *Bases de Datos Biblioteca TEC*. (s. f.). Recuperado 10 de
+septiembre de 2022, de
+<https://biblioteca-ils.tec.mx:443/wamvalidate?url=https%3A%2F%2F0-www-statista-com.biblioteca-ils.tec.mx%3A443%2Fstatistics%2F1150753%2Fmexico-change-housing-demand%2F>
+
+Also According to CEIC DATA
+
+-Mexico Credit to Households was reported at 209.013 USD bn in Dec 2021
+and this records an increase from the previous number of 205.764 USD bn
+for Sep 2021(CEICdata.com, 2018).
+
+With this information we can observe that the trend is actually growing.
+Besides the investigation made before, the pandemic of Covid could
+affect this trend but overall the trend seems to be increasing.
+According to this website the data reached an all-time high of **209.013
+USD bn** in Dec 2021 and a record low of **30.915 USD bn** in Mar
+1995(CEICdata.com, 2018).
+
+![](credit.jpeg){width="355"}
+
+Reference: CEICdata.com. (2018, 1 junio). Mexico Credit to Households.
+1994 - 2022 \| Economic Indicators \| CEIC. Recuperado 10 de septiembre
+de 2022, de
+<https://www.ceicdata.com/en/indicator/mexico/credit-to-households>
+
+# c. Description of the Problem Situation
+
+-   **What is the problem situation?**
+
+Financiera Ma is a popular financial intermediary present in Latin
+American countries. In Mexico the use of credit cards are considerably
+low. Financiera MA don´t understand why their clients don´t use their
+credit cards as often as expected. Maya Velazquez the Chief credit
+officer will be developing a clear understanding of how Socio-economic
+characteristics of Mexico influence individual decisions whether to
+purchase with credit cards or not. In this case is about economic
+factors that could affect or impact the amount of credit that is granted
+for households
+
+-   **How to address the problem situation?**
+
+My job in this evidence 2 is to develop time series models (ARMA, ARIMA
+or SARIMA AND VAR) that can help understand the essential economic
+factors that affect/or impact the amount of credit for households, also
+a forecast to estimate the amount of the 5 next periods.
+
+# d. Data and Methodology
+
+-   **Describe the dataset's variables**
+
+```{r,include=FALSE}
+str(datacredit)
+```
+
+The data set has **7** columns and **109** observations. It is important
+to mention that the data set counts with Na's and is not normalized.
+
+In this case I decided to do two subsets on the data. In part A, only
+using **Date** and **Credit to households**, the name of the data frame
+is **data_credit,** while in PART B using the data normalized without
+NA's since **01/01/2005**, the name of the data frame is **ev2_datam.**
+
+The Date is in POSIXCT format, while all the other variables are in
+numeric format, specifically type dbl.
+
+**Variable Description**
+
+1.  **date period of time** : quarterly basis.
+
+2.  **credit_to_households** :Total credit to households and non-profit
+    institutions serving households, unadjusted for breaks. Billions of
+    Mexican Pesos, Not Seasonally Adjusted. Source: Federal Reserve Bank
+    of St. Louis.
+
+3.  **inflation_rate:** Rate at which prices for goods and services rise
+    over a time period.
+
+4.  **gdp_growth GDP** : measures the value of final goods and services
+    produced in the U.S. GDP growth rate.
+
+5.  **unemployment** : Percentage of the total labor force that is
+    unemployed.
+
+6.  **consumer_confidence** : Referencia a la situación económica actual
+    y esperada del hogar del entrevistado.
+
+7.  **remittances :**Money or goods that migrants send back to families
+    and friends in origin countries (Migration Data Portal). Millions of
+    Dollars.
+
+-   Plot the variable credit_to_households using a time series format
+
+```{r}
+
+plot(datacredit$date,datacredit$credit_to_households, type="l",col="lightpink1", lwd=2, xlab ="Date",ylab ="Total Credit to households ", main = "Quarterly Credit to households")
+
+```
+
+The first observation is that although there's fluctuation in the data
+over time, the general trend seems to be increasing . This means that
+the credit to households has been generally increasing since 2000.
+
+## i) Decompose the time series data into trend, seasonal, and random components. Briefly,
+
+**Describe the decomposition time series plot. Do the time series data
+show a trend? Do the time series data show seasonality?**
+
+```{r}
+ev2_ts<-ts(datacredit$credit_to_households,start=c(2005,1),end=c(2021,4),frequency=4)
+           #frequency=4,start=c(2005,1))
+ev2_tsd <-decompose(ev2_ts)
+plot(ev2_tsd)
+```
+
+The time series data shows a trend and the trend is overall increasing.
+
+Also it shows seasonallity and approximately the peak in
+credit_to_households occurs every year at Q3 Mentioning the decrease,
+approximately it occurs every year at Q1 with oscillating fluctuations
+in between.
+
+## ii)Detect the presence of stationary
+
+```{r}
+adf.test(datacredit$credit_to_households)
+```
+
+| P-Value \> 0.05. Fail to reject the H0. The time series data is non-stationary meaning that is not constant over time.
+
+## iii)Detect the presence of serial autocorrelation
+
+```{r}
+acf(datacredit$credit_to_households,main="Significant Autocorrelations")
+```
+
+In this case because the data is non-stationary generally it shows the
+presence of serial autocorrelation.
+
+\
+- **Does credit_to_household require a seasonal adjustment? If yes,
+please display the seasonal adjustment in a time series plot.**
+
+```{r}
+
+seasonal_adjustment = ev2_ts - ev2_tsd$seasonal
+
+plot(seasonal_adjustment,type="l",col="lightpink1",lwd=2,main="Quarterly Credit to households")
+
+
+par(mfrow=c(1,2))
+
+plot(datacredit$date,datacredit$credit_to_households, type="l",col="lightpink2", lwd=2, xlab ="date",ylab ="Credit to households", main = "Quarterly Credit to households")
+
+plot(seasonal_adjustment,type="l",col="lightpink2",lwd=2,main="Seasonal Adjustment")
+
+```
+
+In this case we do need a seasonal adjustment and with this seasonal
+adjustment, we can smooth out the anomalies in this time series. What we
+are doing to the original series is to substract the seasonal component
+and reducing or deleting the impact of the seasonal factor.
+
+# e. Time Series Regression Analysis
+
+## a. Time Series Model 1
+
+-   Estimate 3 different time series regression models. You might want
+    to consider ARMA (p,q), ARIMA (p,d,q), and / or SARIMA (p,d,q)
+    (P,D,Q)m.\
+
+    -   **ARIMA** short for Autoregressive integrated moving average.
+
+    -   **SARIMA** short for "Seasonal autoregresive integrated moving
+        average", an extension of the model we know as ARIMA.
+
+### ARIMA 1
+
+```{r}
+
+ARIMA.ev1<-Arima(datacredit$credit_to_households,order=c(1,1,1))
+print(ARIMA.ev1)
+```
+
+### SARIMA 2
+
+```{r}
+
+SARIMA.1<-Arima(datacredit$credit_to_households,order=c(1,3,1),seasonal=list(order=c(1,3,1), period=4))
+print(SARIMA.1)
+
+```
+
+### SARIMA 3
+
+```{r}
+SARIMA.ev3<-Arima(datacredit$credit_to_households,order=c(1,1,1),seasonal=list(order=c(1,1,1), period=4))
+print(SARIMA.ev3)
+```
+
+-   **Based on diagnostic tests, compare the 3 estimated time series
+    regression models and select the results that you consider might
+    generate the best forecast.**\
+
+```{r}
+
+plot(ARIMA.ev1$residuals,main="ARIMA(1,1,1)")
+plot(SARIMA.1$residuals,main="SRIMA(1,3,1)")
+plot(SARIMA.ev3$residuals,main="SARIMA(1,1,1)")
+
+```
+
+With this graphs we can observe how the residuals behaviour is within
+the three models. The mean and the variance in the three models are
+having a more constant behaviour and with this we can do a more accurate
+forecast.
+
+```{r, warning=FALSE}
+
+#ADF test suggest that ARIMA residuals are stationary since p-value is <   0.05. 
+adf.test(ARIMA.ev1$residuals)
+
+#ADF test suggest that SARIMA residuals are stationary since p-value is < 0.05. 
+
+adf.test(SARIMA.1$residuals)
+
+
+#ADF test suggest that SARIMA residuals are stationary since p-value is < 0.05. 
+adf.test(SARIMA.ev3$residuals)
+
+```
+
+In this case all the models are stationary
+
+```{r}
+# ACF plot displays weak or no autocorrelation. 
+acf(ARIMA.ev1$residuals,main="ACF - ARIMA (1,1,1)")    
+
+
+# ACF plot displays weak or no autocorrelation. 
+acf(SARIMA.1$residuals,main="ACF - SARIMA (1,3,1)")        
+
+
+ # ACF plot displays weak or no autocorrelation. 
+acf(SARIMA.ev3$residuals,main="ACF - SARIMA (1,1,1)")   
+```
+
+The models #2 and #3 show weak to no autocorrelation While model #1 show
+a little autocorrelation.
+
+```{r}
+# P-value is > 0.05 indicating that ARiMA model does not show residual serial autocorrelation. 
+Box.test(ARIMA.ev1$residuals,lag=1,type="Ljung-Box")
+
+# P-value is > 0.05 indicating that ARIMA model does not show  # residual serial autocorrelation. 
+Box.test(SARIMA.1$residuals,lag=1,type="Ljung-Box")      
+
+# P-value is > 0.05 indicating that ARIMA model does not show  # residual serial autocorrelation. 
+Box.test(SARIMA.ev3$residuals,lag=1,type="Ljung-Box")        
+```
+
+All of the three models do not show residual serial autocorrelation.
+
+### b).Selected model
+
+After analyzing and comparing all the models, the chosen model will be
+the SARIMA (1,1,1), after doing all the necessary tests to the three
+models, all of them are stationary and do not have serial
+autocorrelation, so basing on the AIC (Akaike Information Criterion) the
+lowest from the three models is the SARIMA model 3 with 988.55 .
+
+-   **By using the selected model, make a forecast for the next 5
+    periods. In doing so, include a time series plot showing your
+    forecast**.
+
+```{r}
+#SELECTED TIME SERIES MODEL
+
+SARIMA.3.forecast<-forecast(SARIMA.ev3,h=5)
+plot(SARIMA.3.forecast)
+autoplot(SARIMA.3.forecast)
+SARIMA.3.forecast
+```
+
+With this forecast table the **point forecast** is our best guess of
+what we can happen in the next 5 periods, but to have more sense of how
+far off this forecast could be the lower or higher 95% intervals, show
+that there's an 95% chance that the data will fall in this interval.
+
+We can observe with this forecast that the time series credit to
+households will be increasing
+
+## b. Time Series Model 2
+
+In order to use the data set correctly I am going to use only the dates
+since 01/01/2005.
+
+```{r,include=FALSE}
+library(xts)
+library(zoo)
+library(tseries)
+library(stats)
+library(forecast)
+library(astsa)
+library(corrplot)
+library(AER)
+library(vars)
+library(dynlm)
+library(vars)
+library(mFilter)
+library(tseries)
+library(TSstudio)
+library(forecast)
+library(tidyverse)
+library(sarima)
+library(foreign)
+library(devtools)     
+library(ggplot2)      # data visualization package 
+library(dygraphs)     # plots xts time series objects 
+library(quantmod)     # quantitative financial modeling 
+library(scales)       # provide methods for automatically determining breaks and labels axes and legends
+library(lubridate)    # works with dates and times
+library(hrbrthemes)
+#library(latexpdf)
+```
+
+```{r,include=FALSE}
+
+library(readxl)
+
+ev2_datam <- read_excel("ev2_data.xlsx")
+
+
+ev2_datam <- ev2_datam %>% dplyr::select(date,
+                                        credit_to_households,
+                                        inflation_rate,
+                                        gdp_growth,
+                                        unemployment,
+                                        consumer_confidence,
+                                        remittances)%>%   filter(date >"2004-12-01")
+```
+
+-   **From the time series data set, select the explanatory variables
+    that might affect the total credit to households in Mexico**
+
+1.  **inflation_rate:** Rate at which prices for goods and services rise
+    over a time period.
+
+2.  **gdp_growth GDP** : measures the value of final goods and services
+    produced in the U.S. GDP growth rate.
+
+3.  **unemployment** : Percentage of the total labor force that is
+    unemployed.
+
+-   **Describe the hypothetical relationship / impact between each
+    selected factor and the dependent variable credit_to_household. For
+    example, how does the unemployment rate increase / reduce the credit
+    to households in Mexico?**
+
+    -   Hypothesis:
+
+    -   Unemployment rate may reduce the credit to household's in
+        Mexico. GDP Growth may increase the credit to household's in
+        Mexico. Inflation rate may reduce the credit to household's in
+        Mexico.
+
+-   **In describing the above relationships, please include a time
+    series plot that displays the selected variables' performance over
+    the time period.**
+
+```{r}
+### converting to time series format
+
+e2ts<-ts(ev2_datam$credit_to_households,start=c(2005,1),end=c(2021,4),frequency=4)
+inf_rate<- ts(ev2_datam$inflation_rate,start=c(2005,1),end=c(2021,4),frequency=4)
+gdp_gr<- ts(ev2_datam$gdp_growth,start=c(2005,1),end=c(2021,4),frequency=4)
+unem <- ts(ev2_datam$unemployment,start=c(2005,1),end=c(2021,4),frequency=4)
+
+```
+
+```{r}
+par(mfrow=c(2,3))
+plot(e2ts,type="l",col="lightpink4",lwd=2,main="Credit to Households")
+plot(inf_rate,type="l",col="lightpink3",lwd=2,main="Inflation Rate")
+plot(gdp_gr,type="l",col="lightpink2",lwd=2,main="GDP Growth")
+plot(unemp,type="l",col="lightpink1",lwd=2,main="Unemployment")
+```
+
+```{r}
+ ggplot(ev2_datam, aes(x=credit_to_households, y=inflation_rate)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+ 
+  ggplot(ev2_datam, aes(x=credit_to_households, y=unemployment)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+  
+   ggplot(ev2_datam, aes(x=credit_to_households, y=gdp_growth)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+
+As we can observe the relationship/Impact with credit to households and
+inflation rate is weak to non correlated, but shows a little positive
+relationship, with unemployment is negative, with gdp growth shows a
+little to non correlated negative relationship.
+
+-   Estimate a VAR_Model that includes at least 1 explanatory factor
+    that might affect each of the selected stocks prices.
+
+**Basing the explanatory factors in the visualizations made before**
+
+1.  ***I choose to do 1 VAR model with unemployment, inflation rate and
+    gdp growth.***
+
+### VAR 1
+
+```{r}
+VARR_ts<-cbind(e2ts, unem, inf_rate ,gdp_gr)
+colnames(VARR_ts)<-cbind("credit_to_households","unemployment", "inflation_rate", "gpd_growth")
+
+#VARR_ts
+
+#Check what is the ideal lag
+lag_selection<-VARselect(VARR_ts,lag.max=5,type="const", season=4)
+lag_selection$selection
+lag_selection$criteria
+
+```
+
+```{r}
+VARMODEL1<-VAR(VARR_ts,p=5,type="const",season=4)
+summary(VARMODEL1)
+```
+
+In this case for Credit house hold we have **3 statistically significant
+variables** which are:
+
+1.  The lag of one period of credit households (credit.l1)positive
+    impact
+
+2.  The lag of three periods of credit households (credit.l3)negative
+    impact
+
+| Lower significance (.) is:
+
+3.  The lag of one period of unemployment (unemployment.l5) negative
+    impact
+
+-   **Detect if the estimated VAR_Models residuals are stationary.**\
+
+```{r, warning=FALSE}
+VARMODEL1_residuals<-data.frame(residuals(VARMODEL1))
+adf.test(VARMODEL1_residuals$credit_to_households)
+
+Box.test(VARMODEL1_residuals$credit_to_households,lag=1,type="Ljung-Box") 
+
+```
+
+| The P-Value \< 0.05. We reject the H0. The time series data is stationary meaning that is constant over time.
+| P-value is \> 0.05 indicating the model do not show residual serial autocorrelation.
+
+-   **Detect if the estimated VAR_Models residuals show serial
+    autocorrelation**.
+
+```{r}
+acf(VARMODEL1_residuals$credit_to_households,main="VAR 1 - Credit To Households") 
+```
+
+The model DO NOT show residual serial autocorrelation.
+
+## c.Model selection
+
+-   **Based on the regression results and diagnostic tests, select the
+    VAR_Model that you consider might generate the best forecast.**
+
+    -   The model made before named "VARMODEL1" with the variables
+        unemployment, inflation rate and gdp growth ,I consider might
+        generate the best forecast, based on model diagnosis the model
+        is stationary and doesn't show residual autocorrelation.
+
+-   **Briefly interpret the regression results. That is, is there a
+    statistically significant relationship between the explanatory
+    variables and the main dependent variable?**
+
+    -   There is a statistically significant relationship between 3
+        variables but in general the lag of one period of unemployment
+        has a negative impact with the dependent variable, as well as
+        the lag of one and three periods of credit to households.
+
+-   **Is there an instantaneous causality between credit_to_household
+    and the selected explanatory variables? Estimate a Granger Causality
+    Test to either reject or fail to reject the hypothesis of
+    instantaneous causality.**
+
+    -   The p-value is **lower** than 0.05 so we can reject the Null
+        hypothesis.
+
+        meaning that Credit to house holds can cause and explain
+
+        the independent variables in an unidirectional way.
+
+    -   Talking about the instantaneous causality there is NOT a
+        bidirectional
+
+        causality, the p-value is **greater** than 0.05, in this case
+        the credit to
+
+        household does NOT impact on the independent variables mentioned
+        before.
+
+```{r}
+grangermodel<-causality(VARMODEL1,cause="credit_to_households")
+grangermodel
+
+```
+
+-   Based on the selected VAR_Model, forecast the total credit to
+    households in Mexico for the next 5 periods. Display the forecast in
+    a time series plot.
+
+```{r,warning=FALSE}
+forecast_1<-predict(VARMODEL1,n.ahead=5,ci=0.95) ### forecast for the next 5 months
+fanchart(forecast_1,names="Credit",main="Credit To households",xlab="Time Period",ylab="Credit To Households")
+forecast_1
+```
+
+1.  **January Q1 2022**: It was expected a reach of 4390.851 but to have
+    more sense of how far off this forecast could be the lower or higher
+    results show a decrease up to 4330.645 or an increase up to
+    4451.057.
+
+2.  **APRIL Q2 2022:** It was expected a reach of 4412.207 but to have
+    more sense of how far off this forecast could be the lower or higher
+    results show a decrease up to 4310.642 or an increase up to 4513.771
+
+3.  **AUGUST Q3 2022:** It was expected a reach of 4486.205 but to have
+    more sense of how far off this forecast could be the lower or higher
+    results show a decrease up to 4336.366 or an increase up to 4636.044
+
+4.  **DECEMBER Q4 2022**: It was expected a reach of 4552.319 but to
+    have more sense of how far off this forecast could be the lower or
+    higher results show a decrease up to 4332.29 or an increase up to
+    4712.340
+
+5.  **JANUARY Q1 2023** :It was expected a reach of 4570.974 but to have
+    more sense of how far off this forecast could be the lower or higher
+    results show a decrease up to 4338.690 or an increase up to 4803.259
+
+    As we can observe the trend shows an overall increase.
+
+# f. Conclusions and Recommendations
+
+-   **Briefly describe the main insights from previous sections.**
+
+    -   The selected model in part a) based on de diagnosis results and
+        AIC test, was the SARIMA (1,1,1) and according to this model,
+        the forecast predictions the time series credit to households
+        will be increasing for the next 5 periods.
+
+    -   In part b) The insights for the VAR model is that there is a
+        statistically significant relationship between 3 variables, but
+        in general the lag of one period of unemployment has a negative
+        impact with the dependent variable, as well as the lag of one
+        and three periods of credit to households.
+
+    -   Basing on the Granger Causality Credit to house holds can cause
+        and explain the independent variables in an unidirectional way.
+
+    -   To conclude the VAR forecast also showed an overall increase in
+        the trend for the next 5 periods.
+
+-   **Based on the selected results, please share at least 1
+    recommendation that address the problem situation.**
+
+    -   According to the insights, I recommend **Financiera MA** to take
+        into account external economic factors because they can affect
+        directly the credit that is granted for households. In this case
+        Unemployment is a factor that affects directly the MODEL and has
+        a negative impact on the credit. But overall the trend on Credit
+        Households is increasing besides previous factors as the
+        Pandemic or other external aspects.
+    -   In the Evidence 1, I recommended **Financiera MA** to create a
+        more personalized experience based on the generation of their
+        clients and also offering some type of credit rewards. In
+        addition to that recommendation **Financiera MA** could offer
+        low credit rates. This could be related in creating an easy
+        credit for people that aren´t that connected to finance.
+    -   Figure1.In 2021 people between the ages of 18 and 70 had at
+        least one formal loan, a figure that is equivalent to 32.7% of
+        the population in this age range (INEGI,2022)
+    -   Figure1.
+
+![](inegi.jpeg){width="470"}
+
+-   In conlclusion this recommendations could be more attractive for
+    clients, because many people in Mexico don´t know how to handle
+    their money/finance. Also to attract more people and retain their
+    actual clients **Financiera Ma** could offer some financial advice
+    to their interested clients and actual clients.
+
+# **References**
+
+1.  (INEGI,2022)<https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2022/enif/ENIF21.pdf>
+
+2.   *Bases de Datos Biblioteca TEC*. (s. f.). Recuperado 10 de
+    septiembre de 2022, de
+    <https://biblioteca-ils.tec.mx:443/wamvalidate?url=https%3A%2F%2F0-www-statista-com.biblioteca-ils.tec.mx%3A443%2Fstatistics%2F1150753%2Fmexico-change-housing-demand%2F>
+
+3.  Time Series Analysis: Definition, Types, Techniques, and When It's
+    Used. (S.F). Tableau. Recuperado 10 de septiembre de 2022, de
+    <https://www.tableau.com/learn/articles/time-series-analysis>
+
+4.  CEICdata.com. (2018, 1 junio). Mexico Credit to Households. 1994 -
+    2022 \| Economic Indicators \| CEIC. Recuperado 10 de septiembre de
+    2022, de
+    <https://www.ceicdata.com/en/indicator/mexico/credit-to-households>
